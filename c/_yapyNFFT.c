@@ -129,8 +129,6 @@ static PyObject * py_nfft_init_guru(PyObject *self, PyObject *args)
     return NULL;
   }
 
-  x = (double*)PyArray_DATA(py_x);
-  f_hat = (double*)PyArray_DATA(py_f_hat);
   dims_x = (int*)PyArray_DATA(py_dims_x);
   dims_f_hat = (int*)PyArray_DATA(py_dims_f_hat);
 
@@ -144,39 +142,41 @@ static PyObject * py_nfft_init_guru(PyObject *self, PyObject *args)
 		 FFTW_INIT| FFT_OUT_OF_PLACE,
 		 FFTW_ESTIMATE| FFTW_DESTROY_INPUT);
 
-  return Py_RETURN_NONE;
+  Py_RETURN_NONE;
 }
 
 static PyObject * py_nfft_finalize(PyObject *self, PyObject *args)
 {
   int plan_id;
 
-  if (!PyArg_ParseTuple(args, "i", plan_id)) {
+  if (!PyArg_ParseTuple(args, "i", &plan_id)) {
     return NULL;
   }
 
   nfft_finalize(&p);
 
-  return Py_RETURN_NONE;
+  Py_RETURN_NONE;
 }
 
 static PyObject * py_nfft_precompute_one_psi(PyObject *self, PyObject *args)
 {
   nfft_precompute_one_psi(&p);
 
-  return Py_RETURN_NONE;
+  Py_RETURN_NONE;
 }
 
 static PyObject * py_nfft_trafo(PyObject *self, PyObject *args)
 {
   nfft_trafo(&p);
 
-  return Py_RETURN_NONE;
+  Py_RETURN_NONE;
 }
 
 static PyObject * py_nfft_set(PyObject *self, PyObject *args)
 {
   int ndim;
+  PyArrayObject* py_x;
+  PyArrayObject* py_f_hat;
   PyArrayObject* py_dims_x;
   PyArrayObject* py_dims_f_hat;
 
@@ -217,5 +217,5 @@ static PyObject * py_nfft_set(PyObject *self, PyObject *args)
     p.f_hat[i][1] = f_hat[i * 2 + 1];
   }
 
-  return Py_RETURN_NONE;
+  Py_RETURN_NONE;
 }

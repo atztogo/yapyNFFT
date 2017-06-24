@@ -1,12 +1,12 @@
 import os
 import sys
+import numpy
 from setuptools import setup, Extension
 
-include_dirs = []
-include_dirs += get_numpy_include_dirs()
+include_dirs = [numpy.get_include()]
 
 extra_compile_args = []
-extra_link_args = ['-lnfft3', '-lfftw3', '-lm']
+extra_link_args = ['-L/home/togo/code/nfft/lib', '-lnfft3', '-lfftw3', '-lm']
 define_macros = []
 
 extension = Extension('yapyNFFT._yapyNFFT',
@@ -17,7 +17,7 @@ extension = Extension('yapyNFFT._yapyNFFT',
                       define_macros=define_macros)
 
 setup(name='yapyNFFT',
-      version=version,
+      version='0.1',
       setup_requires=['numpy', 'setuptools'],
       description='This is the yapyNFFT module.',
       author='Atsushi Togo',
