@@ -14,7 +14,9 @@ static PyObject * py_nfft_init_guru(PyObject *self, PyObject *args);
 static PyObject * py_nfft_finalize(PyObject *self, PyObject *args);
 static PyObject * py_nfft_precompute_one_psi(PyObject *self, PyObject *args);
 static PyObject * py_nfft_trafo(PyObject *self, PyObject *args);
+static PyObject * py_nfft_trafo_direct(PyObject *self, PyObject *args);
 static PyObject * py_nfft_set(PyObject *self, PyObject *args);
+static PyObject * py_nfft_get(PyObject *self, PyObject *args);
 
 struct module_state {
   PyObject *error;
@@ -44,8 +46,12 @@ static PyMethodDef _yapyNFFT_methods[] = {
    "nfft_precompute_one_psi"},
   {"nfft_trafo", py_nfft_trafo, METH_VARARGS,
    "nfft_trafo"},
+  {"nfft_trafo_direct", py_nfft_trafo_direct, METH_VARARGS,
+   "nfft_trafo_direct"},
   {"nfft_set", py_nfft_set, METH_VARARGS,
    "nfft_set"},
+  {"nfft_get", py_nfft_get, METH_VARARGS,
+   "nfft_get"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -112,8 +118,7 @@ static nfft_plan p;
 
 static PyObject * py_nfft_init_guru(PyObject *self, PyObject *args)
 {
-  int ndim;
-  double cutoff;
+  int ndim, cutoff;
   PyArrayObject* py_dims_x;
   PyArrayObject* py_dims_f_hat;
 
@@ -121,7 +126,7 @@ static PyObject * py_nfft_init_guru(PyObject *self, PyObject *args)
   int *dims_x, *dims_f_hat;
   int nnode_x;
 
-  if (!PyArg_ParseTuple(args, "iOOd",
+  if (!PyArg_ParseTuple(args, "iOOi",
 			&ndim,
 			&py_dims_x,
 			&py_dims_f_hat,
@@ -172,49 +177,59 @@ static PyObject * py_nfft_trafo(PyObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
+static PyObject * py_nfft_trafo_direct(PyObject *self, PyObject *args)
+{
+  nfft_trafo_direct(&p);
+
+  Py_RETURN_NONE;
+}
+
 static PyObject * py_nfft_set(PyObject *self, PyObject *args)
 {
-  int ndim;
   PyArrayObject* py_x;
   PyArrayObject* py_f_hat;
-  PyArrayObject* py_dims_x;
-  PyArrayObject* py_dims_f_hat;
 
-  int i, j;
-  int *dims_x, *dims_f_hat;
-  int nnode_x, nnode_f_hat;
+  int i;
   double *x, *f_hat;
 
-  if (!PyArg_ParseTuple(args, "OOiOOd",
+  if (!PyArg_ParseTuple(args, "OO",
                         &py_x,
-                        &py_f_hat,
-			&ndim,
-			&py_dims_x,
-			&py_dims_f_hat)) {
+                        &py_f_hat)) {
     return NULL;
   }
 
   x = (double*)PyArray_DATA(py_x);
   f_hat = (double*)PyArray_DATA(py_f_hat);
-  dims_x = (int*)PyArray_DATA(py_dims_x);
-  dims_f_hat = (int*)PyArray_DATA(py_dims_f_hat);
 
-  nnode_x = 1;
-  nnode_f_hat = 1;
-  for (i = 0; i < ndim; i++) {
-    nnode_x *= dims_x[i];
-    nnode_f_hat *= dims_f_hat[i];
+  for (i = 0; i < p.M_total * p.d; i++) {
+    p.x[i] = x[i];
   }
 
-  for (i = 0; i < nnode_x; i++) {
-    for (j = 0; j < ndim; j++) {
-      p.x[i * ndim + j] = x[i * ndim + j];
-    }
-  }
-
-  for (i = 0; i < nnode_f_hat; i++) {
+  for (i = 0; i < p.N_total; i++) {
     p.f_hat[i][0] = f_hat[i * 2];
     p.f_hat[i][1] = f_hat[i * 2 + 1];
+  }
+
+  Py_RETURN_NONE;
+}
+
+static PyObject * py_nfft_get(PyObject *self, PyObject *args)
+{
+  PyArrayObject* py_f;
+
+  int i;
+  double *f;
+
+  if (!PyArg_ParseTuple(args, "O",
+                        &py_f)) {
+    return NULL;
+  }
+
+  f = (double*)PyArray_DATA(py_f);
+
+  for (i = 0; i < p.M_total; i++) {
+    f[i * 2] = p.f[i][0];
+    f[i * 2 + 1] = p.f[i][1];
   }
 
   Py_RETURN_NONE;
