@@ -34,12 +34,11 @@ def generate_data_2d(dims, decimals=None):
     y = np.arange(Ny, dtype='double') / float(Ny) - 0.5
     exp_x = np.exp(2j * np.pi * x)
     exp_y = np.exp(2j * np.pi * y)
-    exp_2d = np.outer(exp_x, exp_y)
+    data = np.empty((Nx, Ny), dtype='complex128', order='C')
+    data[:] = np.outer(exp_x, exp_y)
     if decimals is not None:
-        exp_2d = exp_2d.round(decimals=decimals)
-    dtype = 'f%d' % (exp_2d.itemsize / 2)
-    exp_2d_double = exp_2d.ravel().view(dtype=dtype)
-    return exp_2d_double
+        data = data.round(decimals=decimals)
+    return data
 
 def generate_nodes_2d(dims):
     Nx, Ny = dims
@@ -110,12 +109,12 @@ def main():
     # Transformed result 
     print("# ndft")
     yapyNFFT.trafo_direct()
-    f = yapyNFFT.get_f(dims)
+    f = yapyNFFT.get_f().reshape(dims)
     show(f)
 
     print("# nfft")
     yapyNFFT.trafo()
-    f = yapyNFFT.get_f(dims)
+    f = yapyNFFT.get_f().reshape(dims)
     show(f)
 
     #
@@ -127,16 +126,18 @@ def main():
     # properly chosen.
     print("# adjoint ndft")
     yapyNFFT.adjoint_direct()
-    f_hat = yapyNFFT.get_f_hat(dims)
+    f_hat = yapyNFFT.get_f_hat()
     show(f_hat)
 
     print("# adjoint nfft")
     yapyNFFT.adjoint()
-    f_hat = yapyNFFT.get_f_hat(dims)
+    f_hat = yapyNFFT.get_f_hat()
     show(f_hat)
 
     # Deallocate nfft_plan.
     yapyNFFT.finalize()
+
+
 
 if __name__ == '__main__':
     main()

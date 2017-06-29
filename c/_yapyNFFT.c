@@ -22,6 +22,8 @@ static PyObject * py_nfft_adjoint_direct(PyObject *self, PyObject *args);
 static PyObject * py_nfft_set(PyObject *self, PyObject *args);
 static PyObject * py_nfft_get_f(PyObject *self, PyObject *args);
 static PyObject * py_nfft_get_f_hat(PyObject *self, PyObject *args);
+static PyObject * py_nfft_get_N(PyObject *self, PyObject *args);
+static PyObject * py_nfft_get_M(PyObject *self, PyObject *args);
 
 struct module_state {
   PyObject *error;
@@ -67,6 +69,10 @@ static PyMethodDef _yapyNFFT_methods[] = {
    "nfft_get_f"},
   {"nfft_get_f_hat", py_nfft_get_f_hat, METH_VARARGS,
    "nfft_get_f_hat"},
+  {"nfft_get_N", py_nfft_get_N, METH_VARARGS,
+   "nfft_get_N"},
+  {"nfft_get_M", py_nfft_get_M, METH_VARARGS,
+   "nfft_get_M"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -333,4 +339,22 @@ static PyObject * py_nfft_get_f_hat(PyObject *self, PyObject *args)
   }
 
   Py_RETURN_NONE;
+}
+
+static PyObject * py_nfft_get_N(PyObject *self, PyObject *args)
+{
+  int i;
+  PyObject *dims_N;
+
+  dims_N = PyList_New(p.d);
+  for (i = 0; i < p.d; i++) {
+    PyList_SetItem(dims_N, i, PyLong_FromLong((long) p.N[i]));
+  }
+
+  return dims_N;
+}
+
+static PyObject * py_nfft_get_M(PyObject *self, PyObject *args)
+{
+  return PyLong_FromLong((long) p.M_total);
 }

@@ -34,21 +34,31 @@ def set(x, f_hat):
     """Set data
 
     Args:
-        x: numpy 1d array, dtype='double', order='C'
-        f_hat: numpy 1d array, dtype='double', order='C'
+        x: numpy (nnode, n)-array, dtype='double', order='C'
+        f_hat: numpy (N0, N1, N2, ..., Nn), dtype='complex128', order='C'
 
     """
 
-    _yapyNFFT.nfft_set(x, f_hat)
+    dtype = 'f%d' % (f_hat.itemsize / 2)
+    f_hat_double = f_hat.view(dtype=dtype)
+    _yapyNFFT.nfft_set(x, f_hat_double)
 
-def get_f(dims_x):
-    f = np.zeros(tuple(dims_x) + (2,), dtype='double', order='C')
+def get_f():
+    M = _yapyNFFT.nfft_get_M()
+    f = np.zeros((M, 2), dtype='double', order='C')
     _yapyNFFT.nfft_get_f(f)
     dtype = 'c%d' % (f.itemsize * 2)
     return f.view(dtype=dtype)
 
-def get_f_hat(dims_f_hat):
-    f_hat = np.zeros(tuple(dims_f_hat) + (2,), dtype='double', order='C')
+def get_f_hat():
+    N = _yapyNFFT.nfft_get_N()
+    f_hat = np.zeros(tuple(N) + (2,), dtype='double', order='C')
     _yapyNFFT.nfft_get_f_hat(f_hat)
     dtype = 'c%d' % (f_hat.itemsize * 2)
     return f_hat.view(dtype=dtype)
+
+def get_N():
+    return _yapyNFFT.nfft_get_N()
+
+def get_M():
+    return _yapyNFFT.nfft_get_M()
