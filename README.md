@@ -12,10 +12,15 @@ memory.
 
 ## How to install
 
-First NFFT library has to be prepared. Then modify `setup.py` to find NFFT library, e.g.,
+First NFFT library has to be prepared. Because NFFT relies on FFTW, FFTW3 has to be also properly installed. Then modify `setup.py` so that it can find NFFT and FFTW3 library, e.g.,
+```
+extra_link_args = ['-L/home/togo/code/nfft/lib', '-lnfft3', '-lfftw3', '-lm']
+```
+if `/home/togo/code/nfft/lib` is the directory where NFFT library is installed and FFTW3 is installed the location where automatically found (in the system library directory or in `LD_LIBRARY_PATH`). After setting up this, run `setup.py`, e.g.,
+```
+% python setup.py install --user
+```
 
-`extra_link_args = ['-L/home/togo/code/nfft/lib', '-lnfft3', '-lfftw3', '-lm']`
+## Example
 
-if `/home/togo/code/nfft/lib` is the directory NFFT library is located. After setting up this, run `setup.py`, e.g.,
-
-`% python setup.py install --user`
+Examples are found in the `example` directory.
