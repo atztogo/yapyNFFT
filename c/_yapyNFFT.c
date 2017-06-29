@@ -10,13 +10,18 @@
 #define PYUNICODE_FROMSTRING PyUnicode_FromString
 #endif
 
+static PyObject * py_nfft_init(PyObject *self, PyObject *args);
 static PyObject * py_nfft_init_guru(PyObject *self, PyObject *args);
+static PyObject * py_nfft_init_nd(PyObject *self, PyObject *args);
 static PyObject * py_nfft_finalize(PyObject *self, PyObject *args);
 static PyObject * py_nfft_precompute_one_psi(PyObject *self, PyObject *args);
 static PyObject * py_nfft_trafo(PyObject *self, PyObject *args);
 static PyObject * py_nfft_trafo_direct(PyObject *self, PyObject *args);
+static PyObject * py_nfft_adjoint(PyObject *self, PyObject *args);
+static PyObject * py_nfft_adjoint_direct(PyObject *self, PyObject *args);
 static PyObject * py_nfft_set(PyObject *self, PyObject *args);
-static PyObject * py_nfft_get(PyObject *self, PyObject *args);
+static PyObject * py_nfft_get_f(PyObject *self, PyObject *args);
+static PyObject * py_nfft_get_f_hat(PyObject *self, PyObject *args);
 
 struct module_state {
   PyObject *error;
@@ -38,8 +43,12 @@ error_out(PyObject *m) {
 
 static PyMethodDef _yapyNFFT_methods[] = {
   {"error_out", (PyCFunction)error_out, METH_NOARGS, NULL},
+  {"nfft_init", py_nfft_init, METH_VARARGS,
+   "nfft_init"},
   {"nfft_init_guru", py_nfft_init_guru, METH_VARARGS,
    "nfft_init_guru"},
+  {"nfft_init_nd", py_nfft_init_nd, METH_VARARGS,
+   "nfft_init_nd"},
   {"nfft_finalize", py_nfft_finalize, METH_VARARGS,
    "nfft_finalize"},
   {"nfft_precompute_one_psi", py_nfft_precompute_one_psi, METH_VARARGS,
@@ -48,10 +57,16 @@ static PyMethodDef _yapyNFFT_methods[] = {
    "nfft_trafo"},
   {"nfft_trafo_direct", py_nfft_trafo_direct, METH_VARARGS,
    "nfft_trafo_direct"},
+  {"nfft_adjoint", py_nfft_adjoint, METH_VARARGS,
+   "nfft_adjoint"},
+  {"nfft_adjoint_direct", py_nfft_adjoint_direct, METH_VARARGS,
+   "nfft_adjoint_direct"},
   {"nfft_set", py_nfft_set, METH_VARARGS,
    "nfft_set"},
-  {"nfft_get", py_nfft_get, METH_VARARGS,
-   "nfft_get"},
+  {"nfft_get_f", py_nfft_get_f, METH_VARARGS,
+   "nfft_get_f"},
+  {"nfft_get_f_hat", py_nfft_get_f_hat, METH_VARARGS,
+   "nfft_get_f_hat"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -116,36 +131,83 @@ PyInit__yapyNFFT(void)
 
 static nfft_plan p;
 
+static PyObject * py_nfft_init(PyObject *self, PyObject *args)
+{
+  int nnode;
+  PyArrayObject* py_dims_N;
+
+  int ndim;
+  int *dims_N;
+
+  if (!PyArg_ParseTuple(args, "Oi",
+			&py_dims_N, /* coefficient grid */
+                        &nnode)) { /* sampling points */
+    return NULL;
+  }
+
+  ndim = PyArray_DIM(py_dims_N, 0);
+  dims_N = (int*)PyArray_DATA(py_dims_N);
+
+  nfft_init(&p, ndim, dims_N, nnode);
+
+  Py_RETURN_NONE;
+}
+
 static PyObject * py_nfft_init_guru(PyObject *self, PyObject *args)
 {
-  int ndim, cutoff;
-  PyArrayObject* py_dims_x;
-  PyArrayObject* py_dims_f_hat;
+  int nnode, cutoff;
+  PyArrayObject* py_dims_N;
+  PyArrayObject* py_dims_n;
 
-  int i;
-  int *dims_x, *dims_f_hat;
-  int nnode_x;
+  int ndim;
+  int *dims_N, *dims_n;
 
-  if (!PyArg_ParseTuple(args, "iOOi",
-			&ndim,
-			&py_dims_x,
-			&py_dims_f_hat,
+  if (!PyArg_ParseTuple(args, "OOii",
+			&py_dims_N, /* coefficient grid */
+			&py_dims_n, /* over sampling grid */
+                        &nnode, /* sampling points */
                         &cutoff)) {
     return NULL;
   }
 
-  dims_x = (int*)PyArray_DATA(py_dims_x);
-  dims_f_hat = (int*)PyArray_DATA(py_dims_f_hat);
+  ndim = PyArray_DIM(py_dims_N, 0);
+  dims_N = (int*)PyArray_DATA(py_dims_N);
+  dims_n = (int*)PyArray_DATA(py_dims_n);
 
-  nnode_x = 1;
-  for (i = 0; i < ndim; i++) {
-    nnode_x *= dims_x[i];
-  }
-
-  nfft_init_guru(&p, ndim, dims_x, nnode_x, dims_f_hat, cutoff,
+  nfft_init_guru(&p, ndim, dims_N, nnode, dims_n, cutoff,
 		 PRE_PHI_HUT| PRE_PSI| MALLOC_F_HAT| MALLOC_X| MALLOC_F |
 		 FFTW_INIT| FFT_OUT_OF_PLACE,
 		 FFTW_ESTIMATE| FFTW_DESTROY_INPUT);
+
+  Py_RETURN_NONE;
+}
+
+static PyObject * py_nfft_init_nd(PyObject *self, PyObject *args)
+{
+  int nnode;
+  PyArrayObject* py_dims_N;
+
+  int ndim;
+  int *dims_N;
+
+  if (!PyArg_ParseTuple(args, "Oi",
+			&py_dims_N, /* coefficient grid */
+                        &nnode)) { /* sampling points */
+    return NULL;
+  }
+
+  ndim = PyArray_DIM(py_dims_N, 0);
+  dims_N = (int*)PyArray_DATA(py_dims_N);
+
+  if (ndim == 1) {
+    nfft_init_1d(&p, dims_N[0], nnode);
+  }
+  if (ndim == 2) {
+    nfft_init_2d(&p, dims_N[0], dims_N[1], nnode);
+  }
+  if (ndim == 3) {
+    nfft_init_3d(&p, dims_N[0], dims_N[1], dims_N[2], nnode);
+  }
 
   Py_RETURN_NONE;
 }
@@ -165,7 +227,9 @@ static PyObject * py_nfft_finalize(PyObject *self, PyObject *args)
 
 static PyObject * py_nfft_precompute_one_psi(PyObject *self, PyObject *args)
 {
-  nfft_precompute_one_psi(&p);
+  if (p.flags & PRE_ONE_PSI) {
+    nfft_precompute_one_psi(&p);
+  }
 
   Py_RETURN_NONE;
 }
@@ -180,6 +244,20 @@ static PyObject * py_nfft_trafo(PyObject *self, PyObject *args)
 static PyObject * py_nfft_trafo_direct(PyObject *self, PyObject *args)
 {
   nfft_trafo_direct(&p);
+
+  Py_RETURN_NONE;
+}
+
+static PyObject * py_nfft_adjoint(PyObject *self, PyObject *args)
+{
+  nfft_adjoint(&p);
+
+  Py_RETURN_NONE;
+}
+
+static PyObject * py_nfft_adjoint_direct(PyObject *self, PyObject *args)
+{
+  nfft_adjoint_direct(&p);
 
   Py_RETURN_NONE;
 }
@@ -213,7 +291,7 @@ static PyObject * py_nfft_set(PyObject *self, PyObject *args)
   Py_RETURN_NONE;
 }
 
-static PyObject * py_nfft_get(PyObject *self, PyObject *args)
+static PyObject * py_nfft_get_f(PyObject *self, PyObject *args)
 {
   PyArrayObject* py_f;
 
@@ -230,6 +308,28 @@ static PyObject * py_nfft_get(PyObject *self, PyObject *args)
   for (i = 0; i < p.M_total; i++) {
     f[i * 2] = p.f[i][0];
     f[i * 2 + 1] = p.f[i][1];
+  }
+
+  Py_RETURN_NONE;
+}
+
+static PyObject * py_nfft_get_f_hat(PyObject *self, PyObject *args)
+{
+  PyArrayObject* py_f_hat;
+
+  int i;
+  double *f_hat;
+
+  if (!PyArg_ParseTuple(args, "O",
+                        &py_f_hat)) {
+    return NULL;
+  }
+
+  f_hat = (double*)PyArray_DATA(py_f_hat);
+
+  for (i = 0; i < p.N_total; i++) {
+    f_hat[i * 2] = p.f_hat[i][0];
+    f_hat[i * 2 + 1] = p.f_hat[i][1];
   }
 
   Py_RETURN_NONE;
