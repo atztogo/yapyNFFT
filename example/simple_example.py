@@ -23,8 +23,8 @@ def show(array):
     for i, v in enumerate(array):
         for j, x in enumerate(v):
             print("%3d %3d  %13.5e  %13.5e" % (i, j, x.real, x.imag))
-        print()
-    print()
+        print("")
+    print("")
 
 def generate_data_2d(dims, decimals=None):
     """2D data of exp(2pi i * r), where r = (x, y)^T"""

@@ -33,13 +33,13 @@ def adjoint_direct():
 def set(x, f_hat):
     """Set data
 
-    Args:
+    Args: (n is number of dimensions)
         x: numpy (nnode, n)-array, dtype='double', order='C'
         f_hat: numpy (N0, N1, N2, ..., Nn), dtype='complex128', order='C'
 
     """
 
-    dtype = 'f%d' % (f_hat.itemsize / 2)
+    dtype = 'f%d' % (f_hat.itemsize // 2)
     f_hat_double = f_hat.view(dtype=dtype)
     _yapyNFFT.nfft_set(x, f_hat_double)
 
