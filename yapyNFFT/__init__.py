@@ -45,10 +45,10 @@ def set(x, f_hat):
         dtype = 'f%d' % (f_hat.itemsize // 2)
         f_hat_double = f_hat.view(dtype=dtype)
         _yapyNFFT.nfft_set(x, f_hat_double, 'c')
-    elif f_hat.dtype.name[0] == 'f' and f_hat.itemsize == itemsize * 2:
+    elif f_hat.dtype.name[0] == 'f' and f_hat.itemsize == itemsize:
         _yapyNFFT.nfft_set(x, f_hat, 'f')
     else:
-        print("First argument of yapyNFFT.set has to have dtype='complex%d'"
+        print("Second argument of yapyNFFT.set has to have dtype='complex%d'"
               % (itemsize * 16))
         print("or 'double' (equivalently 'float%d')." % (itemsize * 8))
         raise TypeError

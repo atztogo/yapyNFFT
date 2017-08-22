@@ -297,7 +297,6 @@ static PyObject * py_nfft_set(PyObject *self, PyObject *args)
       p.f_hat[i][1] = f_hat[i * 2 + 1];
     }
   } else {
-    printf("dtype=f\n");
     for (i = 0; i < p.N_total; i++) {
       p.f_hat[i][0] = f_hat[i];
       p.f_hat[i][1] = 0;
