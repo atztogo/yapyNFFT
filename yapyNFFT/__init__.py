@@ -35,13 +35,23 @@ def set(x, f_hat):
 
     Args: (n is number of dimensions)
         x: numpy (nnode, n)-array, dtype='double', order='C'
-        f_hat: numpy (N0, N1, N2, ..., Nn), dtype='complex128', order='C'
+        f_hat: numpy (N0, N1, N2, ..., Nn) 
+            dtype='complex128' or 'float64', order='C'
 
     """
 
-    dtype = 'f%d' % (f_hat.itemsize // 2)
-    f_hat_double = f_hat.view(dtype=dtype)
-    _yapyNFFT.nfft_set(x, f_hat_double)
+    itemsize = np.dtype('double').itemsize
+    if f_hat.dtype.name[0] == 'c' and f_hat.itemsize == itemsize * 2:
+        dtype = 'f%d' % (f_hat.itemsize // 2)
+        f_hat_double = f_hat.view(dtype=dtype)
+        _yapyNFFT.nfft_set(x, f_hat_double, 'c')
+    elif f_hat.dtype.name[0] == 'f' and f_hat.itemsize == itemsize * 2:
+        _yapyNFFT.nfft_set(x, f_hat, 'f')
+    else:
+        print("First argument of yapyNFFT.set has to have dtype='complex%d'"
+              % (itemsize * 16))
+        print("or 'double' (equivalently 'float%d')." % (itemsize * 8))
+        raise TypeError
 
 def get_f():
     M = _yapyNFFT.nfft_get_M()
