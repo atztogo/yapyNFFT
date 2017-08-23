@@ -273,22 +273,31 @@ static PyObject * py_nfft_set(PyObject *self, PyObject *args)
   PyArrayObject* py_x;
   PyArrayObject* py_f_hat;
 
-  int i;
-  char dtype;
+  int i, j;
+  char dtype, order;
   double *x, *f_hat;
 
-  if (!PyArg_ParseTuple(args, "OOc",
+  if (!PyArg_ParseTuple(args, "OOcc",
                         &py_x,
                         &py_f_hat,
-                        &dtype)) {
+                        &dtype,
+                        &order)) {
     return NULL;
   }
 
   x = (double*)PyArray_DATA(py_x);
   f_hat = (double*)PyArray_DATA(py_f_hat);
 
-  for (i = 0; i < p.M_total * p.d; i++) {
-    p.x[i] = x[i];
+  if (order == 'C') {
+    for (i = 0; i < p.M_total * p.d; i++) {
+      p.x[i] = x[i];
+    }
+  } else {
+    for (i = 0; i < p.M_total; i++) {
+      for (j = 0; j < p.d; j++) {
+        p.x[i * p.d + j] = x[i * p.d + p.d - j - 1];
+      }
+    }
   }
 
   if (dtype == 'c') {

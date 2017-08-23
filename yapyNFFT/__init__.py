@@ -30,13 +30,15 @@ def adjoint():
 def adjoint_direct():
     _yapyNFFT.nfft_adjoint_direct()
 
-def set(x, f_hat):
+def set(x, f_hat, x_order='C'):
     """Set data
 
     Args: (n is number of dimensions)
         x: numpy (nnode, n)-array, dtype='double', order='C'
         f_hat: numpy (N0, N1, N2, ..., Nn) 
             dtype='complex128' or 'float64', order='C'
+        x_order: Order in each row of x, e.g. for 3D, xyz ('C') or zyx ('F') in
+            each row.
 
     """
 
@@ -44,9 +46,9 @@ def set(x, f_hat):
     if f_hat.dtype.name[0] == 'c' and f_hat.itemsize == itemsize * 2:
         dtype = 'f%d' % (f_hat.itemsize // 2)
         f_hat_double = f_hat.view(dtype=dtype)
-        _yapyNFFT.nfft_set(x, f_hat_double, 'c')
+        _yapyNFFT.nfft_set(x, f_hat_double, 'c', x_order)
     elif f_hat.dtype.name[0] == 'f' and f_hat.itemsize == itemsize:
-        _yapyNFFT.nfft_set(x, f_hat, 'f')
+        _yapyNFFT.nfft_set(x, f_hat, 'f', x_order)
     else:
         print("Second argument of yapyNFFT.set has to have dtype='complex%d'"
               % (itemsize * 16))
@@ -58,14 +60,14 @@ def get_f():
     f = np.zeros((M, 2), dtype='double', order='C')
     _yapyNFFT.nfft_get_f(f)
     dtype = 'c%d' % (f.itemsize * 2)
-    return f.view(dtype=dtype)
+    return f.view(dtype=dtype).reshape((M,))
 
 def get_f_hat():
     N = _yapyNFFT.nfft_get_N()
     f_hat = np.zeros(tuple(N) + (2,), dtype='double', order='C')
     _yapyNFFT.nfft_get_f_hat(f_hat)
     dtype = 'c%d' % (f_hat.itemsize * 2)
-    return f_hat.view(dtype=dtype)
+    return f_hat.view(dtype=dtype).reshape((N,))
 
 def get_N():
     return _yapyNFFT.nfft_get_N()
