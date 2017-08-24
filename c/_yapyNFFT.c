@@ -272,21 +272,25 @@ static PyObject * py_nfft_set(PyObject *self, PyObject *args)
 {
   PyArrayObject* py_x;
   PyArrayObject* py_f_hat;
-
-  int i, j;
   char dtype, order;
-  double *x, *f_hat;
+  int shift_grid;
 
-  if (!PyArg_ParseTuple(args, "OOcc",
+  int i, j, k, adrs, adrs_shift;
+  double *x, *f_hat;
+  npy_intp *dims;
+
+  if (!PyArg_ParseTuple(args, "OOcci",
                         &py_x,
                         &py_f_hat,
                         &dtype,
-                        &order)) {
+                        &order,
+                        &shift_grid)) {
     return NULL;
   }
 
   x = (double*)PyArray_DATA(py_x);
   f_hat = (double*)PyArray_DATA(py_f_hat);
+  dims = PyArray_DIMS(py_f_hat);
 
   if (order == 'C') {
     for (i = 0; i < p.M_total * p.d; i++) {
@@ -300,15 +304,46 @@ static PyObject * py_nfft_set(PyObject *self, PyObject *args)
     }
   }
 
-  if (dtype == 'c') {
-    for (i = 0; i < p.N_total; i++) {
-      p.f_hat[i][0] = f_hat[i * 2];
-      p.f_hat[i][1] = f_hat[i * 2 + 1];
+  if (shift_grid) {
+    if (dtype == 'c') {
+      dims[2] /= 2;
+      for (i = 0; i < dims[0]; i++) {
+        for (j = 0; j < dims[1]; j++) {
+          for (k = 0; k < dims[2]; k++) {
+            adrs = i * dims[1] * dims[2] + j * dims[2] + k;
+            adrs_shift = (((i + dims[0] / 2) % dims[0]) * dims[1] * dims[2] +
+                          ((j + dims[1] / 2) % dims[1]) * dims[2] +
+                          ((k + dims[2] / 2) % dims[2]));
+            p.f_hat[adrs_shift][0] = f_hat[adrs * 2];
+            p.f_hat[adrs_shift][1] = f_hat[adrs * 2 + 1];
+          }
+        }
+      }
+    } else {
+      for (i = 0; i < dims[0]; i++) {
+        for (j = 0; j < dims[1]; j++) {
+          for (k = 0; k < dims[2]; k++) {
+            adrs = i * dims[1] * dims[2] + j * dims[2] + k;
+            adrs_shift = (((i + dims[0] / 2) % dims[0]) * dims[1] * dims[2] +
+                          ((j + dims[1] / 2) % dims[1]) * dims[2] +
+                          ((k + dims[2] / 2) % dims[2]));
+            p.f_hat[adrs_shift][0] = f_hat[adrs];
+            p.f_hat[adrs_shift][1] = 0;
+          }
+        }
+      }
     }
   } else {
-    for (i = 0; i < p.N_total; i++) {
-      p.f_hat[i][0] = f_hat[i];
-      p.f_hat[i][1] = 0;
+    if (dtype == 'c') {
+      for (i = 0; i < p.N_total; i++) {
+        p.f_hat[i][0] = f_hat[i * 2];
+        p.f_hat[i][1] = f_hat[i * 2 + 1];
+      }
+    } else {
+      for (i = 0; i < p.N_total; i++) {
+        p.f_hat[i][0] = f_hat[i];
+        p.f_hat[i][1] = 0;
+      }
     }
   }
 

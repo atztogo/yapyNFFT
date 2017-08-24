@@ -30,25 +30,31 @@ def adjoint():
 def adjoint_direct():
     _yapyNFFT.nfft_adjoint_direct()
 
-def set(x, f_hat, x_order='C'):
+def set(x, f_hat, x_order='C', shift_grid=False):
     """Set data
 
     Args: (n is number of dimensions)
         x: numpy (nnode, n)-array, dtype='double', order='C'
-        f_hat: numpy (N0, N1, N2, ..., Nn) 
+        f_hat: numpy (N0, N1, N2, ..., Nn) where Nn are even numbers.
             dtype='complex128' or 'float64', order='C'
         x_order: Order in each row of x, e.g. for 3D, xyz ('C') or zyx ('F') in
             each row.
+        shift_grid (bool): f_hat data are shifted in memory +Nn/2 along all
+            dimensions.
 
     """
+
+    if (np.array(f_hat.shape) % 2 != 0).any():
+        print("All dimentions have to be even numbers.")
+        raise ValueError
 
     itemsize = np.dtype('double').itemsize
     if f_hat.dtype.name[0] == 'c' and f_hat.itemsize == itemsize * 2:
         dtype = 'f%d' % (f_hat.itemsize // 2)
         f_hat_double = f_hat.view(dtype=dtype)
-        _yapyNFFT.nfft_set(x, f_hat_double, 'c', x_order)
+        _yapyNFFT.nfft_set(x, f_hat_double, 'c', x_order, shift_grid * 1)
     elif f_hat.dtype.name[0] == 'f' and f_hat.itemsize == itemsize:
-        _yapyNFFT.nfft_set(x, f_hat, 'f', x_order)
+        _yapyNFFT.nfft_set(x, f_hat, 'f', x_order, shift_grid * 1)
     else:
         print("Second argument of yapyNFFT.set has to have dtype='complex%d'"
               % (itemsize * 16))
