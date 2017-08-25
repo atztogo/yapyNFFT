@@ -272,14 +272,14 @@ static PyObject * py_nfft_set(PyObject *self, PyObject *args)
 {
   PyArrayObject* py_x;
   PyArrayObject* py_f_hat;
-  char dtype, order;
+  char *dtype, *order;
   int shift_grid;
 
   int i, j, k, adrs, adrs_shift;
   double *x, *f_hat;
   npy_intp *dims;
 
-  if (!PyArg_ParseTuple(args, "OOcci",
+  if (!PyArg_ParseTuple(args, "OOssi",
                         &py_x,
                         &py_f_hat,
                         &dtype,
@@ -292,7 +292,7 @@ static PyObject * py_nfft_set(PyObject *self, PyObject *args)
   f_hat = (double*)PyArray_DATA(py_f_hat);
   dims = PyArray_DIMS(py_f_hat);
 
-  if (order == 'C') {
+  if (order[0] == 'C') {
     for (i = 0; i < p.M_total * p.d; i++) {
       p.x[i] = x[i];
     }
@@ -305,7 +305,7 @@ static PyObject * py_nfft_set(PyObject *self, PyObject *args)
   }
 
   if (shift_grid) {
-    if (dtype == 'c') {
+    if (dtype[0] == 'c') {
       dims[2] /= 2;
       for (i = 0; i < dims[0]; i++) {
         for (j = 0; j < dims[1]; j++) {
@@ -334,7 +334,7 @@ static PyObject * py_nfft_set(PyObject *self, PyObject *args)
       }
     }
   } else {
-    if (dtype == 'c') {
+    if (dtype[0] == 'c') {
       for (i = 0; i < p.N_total; i++) {
         p.f_hat[i][0] = f_hat[i * 2];
         p.f_hat[i][1] = f_hat[i * 2 + 1];
