@@ -3,7 +3,7 @@ import sys
 import numpy
 from setuptools import setup, Extension
 
-include_dirs = [numpy.get_include()]
+include_dirs = [numpy.get_include(), '/home/togo/code/nfft/include']
 
 extra_compile_args = []
 extra_link_args = ['-L/home/togo/code/nfft/lib', '-lnfft3', '-lfftw3', '-lm']
