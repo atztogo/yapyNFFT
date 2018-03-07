@@ -6,7 +6,8 @@ from setuptools import setup, Extension
 include_dirs = [numpy.get_include(), '/home/togo/code/nfft/include']
 
 extra_compile_args = []
-extra_link_args = ['-L/home/togo/code/nfft/lib', '-lnfft3', '-lfftw3', '-lm']
+#extra_link_args = ['-L/home/togo/code/nfft/lib', '-lnfft3', '-lfftw3', '-lm']
+extra_link_args = ['-L/home/togo/code/nfft/lib', '-lnfft3_threads', '-lfftw3', '-lm']
 define_macros = []
 
 extension = Extension('yapyNFFT._yapyNFFT',
