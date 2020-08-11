@@ -3,11 +3,18 @@ import sys
 import numpy
 from setuptools import setup, Extension
 
-include_dirs = [numpy.get_include(), '/home/togo/code/nfft/include']
-
 extra_compile_args = []
-#extra_link_args = ['-L/home/togo/code/nfft/lib', '-lnfft3', '-lfftw3', '-lm']
-extra_link_args = ['-L/home/togo/code/nfft/lib', '-lnfft3_threads', '-lfftw3', '-lm']
+
+if 'CONDA_PREFIX' in os.environ:
+    include_dirs = [numpy.get_include(),
+                    os.path.join(os.environ['CONDA_PREFIX'], 'include')]
+    extra_link_args = ['-L' + os.path.join(os.environ['CONDA_PREFIX'], 'lib'),
+                       '-lnfft3_threads', '-lfftw3', '-lm']
+else:
+    include_dirs = [numpy.get_include(), '/home/togo/code/nfft/include']
+    extra_link_args = ['-L/home/togo/code/nfft/lib', '-lnfft3_threads', '-lfftw3', '-lm']
+    #extra_link_args = ['-L/home/togo/code/nfft/lib', '-lnfft3', '-lfftw3', '-lm']
+
 define_macros = []
 
 extension = Extension('yapyNFFT._yapyNFFT',
