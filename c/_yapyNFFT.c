@@ -146,7 +146,7 @@ static PyObject * py_nfft_init(PyObject *self, PyObject *args)
   int *dims_N;
 
   if (!PyArg_ParseTuple(args, "Oi",
-			&py_dims_N, /* coefficient grid */
+                        &py_dims_N, /* coefficient grid */
                         &nnode)) { /* sampling points */
     return NULL;
   }
@@ -169,8 +169,8 @@ static PyObject * py_nfft_init_guru(PyObject *self, PyObject *args)
   int *dims_N, *dims_n;
 
   if (!PyArg_ParseTuple(args, "OOii",
-			&py_dims_N, /* coefficient grid */
-			&py_dims_n, /* over sampling grid */
+                        &py_dims_N, /* coefficient grid */
+                        &py_dims_n, /* over sampling grid */
                         &nnode, /* sampling points */
                         &cutoff)) {
     return NULL;
@@ -181,9 +181,9 @@ static PyObject * py_nfft_init_guru(PyObject *self, PyObject *args)
   dims_n = (int*)PyArray_DATA(py_dims_n);
 
   nfft_init_guru(&p, ndim, dims_N, nnode, dims_n, cutoff,
-		 PRE_PHI_HUT| PRE_PSI| MALLOC_F_HAT| MALLOC_X| MALLOC_F |
-		 FFTW_INIT| FFT_OUT_OF_PLACE,
-		 FFTW_ESTIMATE| FFTW_DESTROY_INPUT);
+                 PRE_PHI_HUT| PRE_PSI| MALLOC_F_HAT| MALLOC_X| MALLOC_F |
+                 FFTW_INIT| FFT_OUT_OF_PLACE,
+                 FFTW_ESTIMATE| FFTW_DESTROY_INPUT);
 
   Py_RETURN_NONE;
 }
@@ -197,7 +197,7 @@ static PyObject * py_nfft_init_nd(PyObject *self, PyObject *args)
   int *dims_N;
 
   if (!PyArg_ParseTuple(args, "Oi",
-			&py_dims_N, /* coefficient grid */
+                        &py_dims_N, /* coefficient grid */
                         &nnode)) { /* sampling points */
     return NULL;
   }
